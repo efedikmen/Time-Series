@@ -1,0 +1,101 @@
+---
+title: "Shumway Stoffer Chapter 1"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
+---
+
+Plotting and importing the library of the book. 
+
+1) J&J historical quarterly earnings, obvious heteroskedasticity and non stationarity.
+
+```{r}
+library(astsa)
+plot(jj, type='o', ylab='Quarterly EPS')
+```
+2) Dow Jones index daily log returns. It is mean reverting with the time series being differenced once, but it is heteroskedastic with varying magnitudes of fluctations.
+
+```{r}
+library(xts)
+djia_ret=diff(log(djia$Close))[-1]
+plot(djia_ret, main='Dow Jones Returns', type='n')
+lines(djia_ret)
+
+```
+3) Plotting two time series aligned on separate graphs:
+
+```{r}
+par(mfrow = c(2,1)) # setting up the grid
+plot(soi, ylab='', xlab='', main='Southern Oscillation Index')
+plot(rec, ylab='', xlab='', main='Recruitment')
+```
+
+4) Plotting multiple vectors of time series originating from the same sources.
+
+```{r}
+par(mfrow = c(2,1))
+ts.plot(fmri1[,2:5], col=1:4, ylab='BOLD', main='Cortex')
+ts.plot(fmri1[,6:9], col=1:4, ylab='BOLD', main='Thalamus and Cerebellum')
+
+```
+
+Plotting standard normal White Noise and its moving average with 3 times. The series looks smoother after
+taking moving average.
+
+```{r}
+w = rnorm(1000,0,1)
+v = filter(w, sides = 2, filter = rep(1/3,3)) # moving average
+par(mfrow = c(2,1))
+plot.ts(w, main = 'N(0,1) distributed white noise (n=1000)')
+plot.ts(v, ylim=c(-3,3), main="moving average")
+```
+
+Simulating an AR(2) with the above white noise where $x_t=x_{t-1}-0.9x_{t-2}+w_t$:
+
+Notice that it is stationary as the roots of the characteristic polynomial $1-0.9x+x^2=0$ lie outside the unit circle.
+
+```{r}
+x = filter(w, filter=c(1, -0.9), method='recursive')[-(1:50)] # first 50 removed
+plot.ts(x, main='AR(2)')
+```
+Random walk with drift: $x_t=a+x_{t-1}+w_t$ where $a\in\mathbb{R}$ is the drift term.
+
+```{r}
+x = cumsum(w[0:200])
+wd = w + 0.2
+xd = cumsum(wd[0:200])
+plot.ts(xd, ylim=c(-5,55), main='random walk', ylab='')
+lines(x, col=4)
+abline(h=0, col=4, lty=2)
+abline(a=0, b=0.2, lty=2)
+
+```
+
+Harmonic model: $x_t=2\cos(2\pi\frac{t+15}{50})+w_t$. When signal to noise ratio, $\sigma_w=1$, we have $w_t\sim\mathcal{N}(0,1)$. When $\sigma_w=5$, we have $w_t\sim\mathcal{N}(0,5^2)$. See the differences between the signal to noise ratios:
+
+```{r}
+cs = cos(2*pi*(1:500/50+-.6*pi))
+w = rnorm(500, 0, 1)
+par(mfrow=c(3,1), mar=c(3,2,2,1), cex.main=1.5)
+plot.ts(cs, main=expression(2*cos(2*pi*t/50+.6*pi)))
+plot.ts(cs+w, main=expression(2*cos(2*pi*t/50+.6*pi) + N(0,1)))
+plot.ts(cs+5*w, main=expression(2*cos(2*pi*t/50+.6*pi) + N(0,25)))
+```
+
+The autocovariance function of Gaussian white noise $\epsilon_t$ is: $\gamma_\epsilon(s,t)=\begin{case}\sigma^2 & ,s=t\\0 & \text{else} \end{case}$.
+
+Now looking at the cross correlation function:
+Observe that y leads x before lag -5, the CCF peaks at lag=-5 and then x starts to lead y at higher lags.
+```{r}
+x = rnorm(1000)
+y = lag(x, -5) + rnorm(1000)
+ccf(x, y, ylab='CCF', main='', type='covariance')
+```
+
