@@ -1,3 +1,6 @@
+#Ref: THE ESTIMATION AND APPLICATION OF LONG MEMORY TIME SERIES MODELS
+#Geweke, Porter-Hudak (1983)
+
 #Creating the periodogram of a time series
 periodogram <- function(x){
   x=unlist(x)
@@ -9,7 +12,7 @@ periodogram <- function(x){
 
 #Geweke Porter Hudak estimate of the memory parameter d
 #manually input the number of periodogram ordinates to be 
-#used in the estimation
+#used in the estimation 
 gph <-function(x,M) {
   n=length(unlist(x))
   
